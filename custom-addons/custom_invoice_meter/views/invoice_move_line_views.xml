@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit Invoice Line Tree View in Form -->
+    <record id="view_move_form_inherit_meter_reading" model="ir.ui.view">
+        <field name="name">account.move.form.inherit.meter.reading</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <!-- Add meter reading columns after the name field in tree view -->
+            <xpath expr="//field[@name='invoice_line_ids']/list/field[@name='name']" position="after">
+                <field name="previous_reading" 
+                       optional="show" 
+                       readonly="1"
+                       column_invisible="parent.move_type not in ('out_invoice', 'out_refund')"/>
+                <field name="current_reading" 
+                       optional="show"
+                       column_invisible="parent.move_type not in ('out_invoice', 'out_refund')"/>
+                <field name="actual_consumption" 
+                       optional="show"
+                       column_invisible="parent.move_type not in ('out_invoice', 'out_refund')"/>
+            </xpath>
+
+            <!-- Modify quantity field to make it readonly when actual_consumption is used -->
+            <xpath expr="//field[@name='invoice_line_ids']/list/field[@name='quantity']" position="attributes">
+                <attribute name="readonly">actual_consumption > 0</attribute>
+            </xpath>
+            
+            <!-- Add meter readings to the invoice line form popup -->
+            <xpath expr="//field[@name='invoice_line_ids']/form/sheet/group/field[@name='quantity']" position="after">
+                <field name="previous_reading" 
+                       readonly="1"
+                       invisible="parent.move_type not in ('out_invoice', 'out_refund')"/>
+                <field name="current_reading"
+                       invisible="parent.move_type not in ('out_invoice', 'out_refund')"/>
+                <field name="actual_consumption"
+                       invisible="parent.move_type not in ('out_invoice', 'out_refund')"/>
+            </xpath>
+            
+            <!-- Add meter readings fields to kanban (for mobile compatibility) -->
+            <xpath expr="//field[@name='invoice_line_ids']/kanban/templates/t[@t-name='card']//div[@class='text-muted'][last()]" position="after">
+                <div class="text-muted" t-if="!['line_section', 'line_note'].includes(record.display_type.raw_value) and ['out_invoice', 'out_refund'].includes(record.parent.move_type)">
+                    <t t-if="record.previous_reading.raw_value or record.current_reading.raw_value">
+                        Meter - Prev: 
+                        <field name="previous_reading"/> | 
+                        New: <field name="current_reading"/> | 
+                        Actual: <field name="actual_consumption"/>
+                    </t>
+                </div>
+            </xpath>
+            
+            <!-- Add invisible fields to kanban for field availability -->
+            <xpath expr="//field[@name='invoice_line_ids']/kanban/field[@name='move_type']" position="after">
+                <field name="previous_reading"/>
+                <field name="current_reading"/>
+                <field name="actual_consumption"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,4 +1,5 @@
 from odoo import models, fields, api
+from odoo.exceptions import ValidationError
 
 
 class AccountMoveLine(models.Model):
@@ -10,7 +11,8 @@ class AccountMoveLine(models.Model):
     )
 
     current_reading = fields.Float(
-        string='New'
+        string='New',
+        # required=True
     )
 
     actual_consumption = fields.Float(
@@ -23,18 +25,30 @@ class AccountMoveLine(models.Model):
     def _compute_actual_consumption(self):
         for line in self:
             previous = 0.0
-
             if line.product_id and line.move_id.partner_id:
-                prev_line = self.env['account.move.line'].search([
-                    ('move_id.partner_id', '=', line.move_id.partner_id.id),
-                    ('product_id', '=', line.product_id.id),
-                    ('move_id.state', '=', 'posted'),
-                    ('move_id.date', '<', line.move_id.date),
-                ], order='move_id.date desc', limit=1)
+                # get previous posted moves for the partner
+                prev_move = self.env['account.move'].search([
+                    ('partner_id', '=', line.move_id.partner_id.id),
+                    ('state', '=', 'posted'),
+                    ('date', '<', line.move_id.date)
+                ], order='date desc', limit=1)
 
-                if prev_line:
-                    previous = prev_line.current_reading
+                if prev_move:
+                    prev_line = self.env['account.move.line'].search([
+                        ('move_id', '=', prev_move.id),
+                        ('product_id', '=', line.product_id.id)
+                    ], limit=1)
+                    if prev_line:
+                        previous = prev_line.current_reading
 
             line.previous_reading = previous
             line.actual_consumption = line.current_reading - previous
             line.quantity = line.actual_consumption
+
+    @api.constrains('current_reading', 'actual_consumption')
+    def _check_consumption(self):
+        for line in self:
+            if line.actual_consumption < 0:
+                raise ValidationError(
+                    f"Actual consumption cannot be negative. Check readings for product {line.product_id.name}."
+                )

@@ -1,2 +1,4 @@
 odoo.conf
 custom-invoice-odoo18.code-workspace
+__pycache__/
+*.pyc
