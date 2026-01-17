@@ -4,6 +4,8 @@ This project contains a custom Odoo 18 module for extending the Accounting modul
 
 ---
 
+Github repository: [https://github.com/SamuelMaiko/odoo-custom-invoice](https://github.com/SamuelMaiko/odoo-custom-invoice)
+
 ## Requirements
 
 - ✅ **PostgreSQL** or **docker postgres image**
