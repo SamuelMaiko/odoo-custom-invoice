@@ -11,7 +11,8 @@
         # views
         'views/invoice_move_line_views.xml',
 
-        # Views and reports will be added later
+        # reports
+        'reports/invoice_report_views.xml',
     ],
     'installable': True,
     'application': False,

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Report inheritance - Add meter reading columns -->
+        <template id="report_invoice_document_inherit_meter" inherit_id="account.report_invoice_document">
+            
+            <!-- Add column headers after "Taxes" column -->
+            <xpath expr="//thead/tr/th[@name='th_quantity']" position="before">
+                <th name="th_current_reading" class="text-end">New</th>
+                <th name="th_previous_reading" class="text-end">Previous</th>
+                <th name="th_consumption" class="text-end">Actual</th>
+            </xpath>
+
+            <!-- Add data cells for product lines - after the taxes cell -->
+            <xpath expr="//td[@name='td_quantity']" position="before">
+                <td name="td_previous_reading" class="text-end">
+                    <span t-field="line.previous_reading"/>
+                </td>
+                <td name="td_current_reading" class="text-end">
+                    <span t-field="line.current_reading"/>
+                </td>
+                <td name="td_consumption" class="text-end">
+                    <span t-field="line.actual_consumption"/>
+                </td>
+            </xpath>
+
+        </template>
+    </data>
+</odoo>
