@@ -8,12 +8,12 @@
         <field name="arch" type="xml">
             <!-- Add meter reading columns after the name field in tree view -->
             <xpath expr="//field[@name='invoice_line_ids']/list/field[@name='name']" position="after">
+                <field name="current_reading" 
+                       optional="show"
+                       column_invisible="parent.move_type not in ('out_invoice', 'out_refund')"/>
                 <field name="previous_reading" 
                        optional="show" 
                        readonly="1"
-                       column_invisible="parent.move_type not in ('out_invoice', 'out_refund')"/>
-                <field name="current_reading" 
-                       optional="show"
                        column_invisible="parent.move_type not in ('out_invoice', 'out_refund')"/>
                 <field name="actual_consumption" 
                        optional="show"

@@ -6,12 +6,13 @@ class AccountMoveLine(models.Model):
     _inherit = 'account.move.line'
 
     previous_reading = fields.Float(
+        string="Previous",
         compute='_compute_previous_reading',
         store=True,
     )
 
     current_reading = fields.Float(
-        string='Current Reading',
+        string='New',
         required=True
     )
 
