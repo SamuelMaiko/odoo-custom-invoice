@@ -27,11 +27,12 @@ class AccountMoveLine(models.Model):
         for line in self:
             line.previous_reading = 0.0
 
-            if not line.product_id or not line.move_id.partner_id:
+            # Skip non-metered products
+            if not line.product_id or not line.product_id.is_metered_product or not line.move_id.partner_id:
                 continue
 
             prev_line = self.env['account.move.line'].search([
-                ('partner_id', '=', line.move_id.partner_id.id),  # direct field
+                ('partner_id', '=', line.move_id.partner_id.id),
                 ('product_id', '=', line.product_id.id),
                 ('move_id.state', '=', 'posted'),
                 ('current_reading', '!=', False),
@@ -40,9 +41,14 @@ class AccountMoveLine(models.Model):
             if prev_line:
                 line.previous_reading = prev_line.current_reading
 
-    @api.depends('previous_reading', 'current_reading')
+    @api.depends('previous_reading', 'current_reading', 'product_id')
     def _compute_actual_consumption(self):
         for line in self:
+            # Only compute for metered products
+            if not line.product_id or not line.product_id.is_metered_product:
+                line.actual_consumption = 0.0
+                continue
+
             if line.current_reading is not None and line.previous_reading is not None:
                 if line.current_reading != 0 and (line.current_reading < line.previous_reading):
                     raise ValidationError(
