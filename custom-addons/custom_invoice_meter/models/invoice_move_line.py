@@ -6,13 +6,12 @@ class AccountMoveLine(models.Model):
     _inherit = 'account.move.line'
 
     previous_reading = fields.Float(
-        string='Previous',
-        readonly=True,
-        copy=False,
+        compute='_compute_previous_reading',
+        store=True,
     )
 
     current_reading = fields.Float(
-        string='New',
+        string='Current Reading',
         required=True
     )
 
@@ -22,64 +21,91 @@ class AccountMoveLine(models.Model):
         store=True,
     )
 
+    @api.depends('product_id', 'move_id.partner_id')
+    def _compute_previous_reading(self):
+        for line in self:
+            line.previous_reading = 0.0
+
+            if not line.product_id or not line.move_id.partner_id:
+                continue
+
+            prev_line = self.env['account.move.line'].search([
+                ('partner_id', '=', line.move_id.partner_id.id),  # direct field
+                ('product_id', '=', line.product_id.id),
+                ('move_id.state', '=', 'posted'),
+                ('current_reading', '!=', False),
+            ], order='date desc, id desc', limit=1)
+
+            if prev_line:
+                line.previous_reading = prev_line.current_reading
+
     @api.depends('previous_reading', 'current_reading')
     def _compute_actual_consumption(self):
-        for rec in self:
-            if rec.current_reading and rec.previous_reading and rec.current_reading < rec.previous_reading:
-                raise ValidationError(
-                    "Current reading must be ≥ previous reading.")
-            rec.actual_consumption = (
-                rec.current_reading or 0.0) - (rec.previous_reading or 0.0)
+        for line in self:
+            if line.current_reading is not None and line.previous_reading is not None:
+                if line.current_reading != 0 and (line.current_reading < line.previous_reading):
+                    raise ValidationError(
+                        "Current reading must be ≥ previous reading.")
+                line.actual_consumption = line.current_reading - line.previous_reading
+                line.quantity = line.actual_consumption  # auto-update quantity
+    # @api.depends('previous_reading', 'current_reading')
+    # def _compute_actual_consumption(self):
+    #     for rec in self:
+    #         if rec.current_reading and rec.previous_reading and rec.current_reading < rec.previous_reading:
+    #             raise ValidationError(
+    #                 "Current reading must be ≥ previous reading.")
+    #         rec.actual_consumption = (
+    #             rec.current_reading or 0.0) - (rec.previous_reading or 0.0)
 
-    @api.onchange('product_id')
-    def _onchange_product_id_custom(self):
-        if not self.product_id or not self.move_id.partner_id:
-            self.previous_reading = 0.0
-            return
+    # @api.onchange('product_id')
+    # def _onchange_product_id_custom(self):
+    #     if not self.product_id or not self.move_id.partner_id:
+    #         self.previous_reading = 0.0
+    #         return
 
-        # Safe: use many2one value directly (works with NewId)
-        domain = [
-            ('partner_id', '=', self.move_id.partner_id.id),           # ← key fix
-            ('product_id', '=', self.product_id.id),
-            ('move_id.state', '=', 'posted'),
-            # include refunds if needed
-            ('move_id.move_type', 'in', ('out_invoice', 'out_refund')),
-            # optional: only lines that had a reading
-            ('current_reading', '!=', False),
-        ]
+    #     # Safe: use many2one value directly (works with NewId)
+    #     domain = [
+    #         ('partner_id', '=', self.move_id.partner_id.id),           # ← key fix
+    #         ('product_id', '=', self.product_id.id),
+    #         ('move_id.state', '=', 'posted'),
+    #         # include refunds if needed
+    #         ('move_id.move_type', 'in', ('out_invoice', 'out_refund')),
+    #         # optional: only lines that had a reading
+    #         ('current_reading', '!=', False),
+    #     ]
 
-        last_line = self.env['account.move.line'].search(
-            domain, order='date desc, move_id desc, id desc', limit=1)
+    #     last_line = self.env['account.move.line'].search(
+    #         domain, order='date desc, move_id desc, id desc', limit=1)
 
-        if last_line:
-            self.previous_reading = last_line.current_reading
-        else:
-            self.previous_reading = 0.0   # or False / keep empty — your choice
+    #     if last_line:
+    #         self.previous_reading = last_line.current_reading
+    #     else:
+    #         self.previous_reading = 0.0   # or False / keep empty — your choice
 
-        # Trigger consumption & quantity update
-        self._onchange_current_reading_custom()
+    #     # Trigger consumption & quantity update
+    #     self._onchange_current_reading_custom()
 
-    @api.onchange('current_reading')
-    def _onchange_current_reading_custom(self):
-        if self.current_reading or self.previous_reading:  # allow 0
-            self._compute_actual_consumption()   # manual call since it's @api.depends
-            self.quantity = self.actual_consumption   # auto-set delivered/consumed qty
+    # @api.onchange('current_reading')
+    # def _onchange_current_reading_custom(self):
+    #     if self.current_reading or self.previous_reading:  # allow 0
+    #         self._compute_actual_consumption()   # manual call since it's @api.depends
+    #         self.quantity = self.actual_consumption   # auto-set delivered/consumed qty
 
-    # Optional: make current_reading required only on posted invoices
-    # (uncomment in xml view instead of field definition)
-    # current_reading = fields.Float(..., required=False)
+    # # Optional: make current_reading required only on posted invoices
+    # # (uncomment in xml view instead of field definition)
+    # # current_reading = fields.Float(..., required=False)
 
 
-class AccountMove(models.Model):
-    _inherit = 'account.move'
+# class AccountMove(models.Model):
+#     _inherit = 'account.move'
 
-    @api.onchange('partner_id')
-    def _onchange_partner_id_custom(self):
-        """ Re-compute previous readings on all lines when customer changes late """
-        if self.partner_id:
-            for line in self.invoice_line_ids:
-                if line.product_id:
-                    line._onchange_product_id_custom()
-        else:
-            for line in self.invoice_line_ids:
-                line.previous_reading = 0.0
+#     @api.onchange('partner_id')
+#     def _onchange_partner_id_custom(self):
+#         """ Re-compute previous readings on all lines when customer changes late """
+#         if self.partner_id:
+#             for line in self.invoice_line_ids:
+#                 if line.product_id:
+#                     line._onchange_product_id_custom()
+#         else:
+#             for line in self.invoice_line_ids:
+#                 line.previous_reading = 0.0
