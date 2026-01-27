@@ -11,6 +11,8 @@
         # views
         'views/invoice_move_line_views.xml',
         'views/product_views.xml',
+        'views/utility_meter_views.xml',
+        'views/utility_meter_menu.xml',
 
         # reports
         'reports/invoice_report_views.xml',

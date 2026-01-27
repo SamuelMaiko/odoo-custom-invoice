@@ -23,8 +23,9 @@ class UtilityMeter(models.Model):
     )
     product_id = fields.Many2one(
         'product.product',
-        string='Meter Type/Product',
+        string='Product',
         required=True,
+        domain=[('is_metered_product', '=', True)],
     )
 
     status = fields.Selection([
@@ -107,14 +108,34 @@ class UtilityMeter(models.Model):
                         "Only one active meter is allowed per customer and product."
                     )
 
-    # @api.depends('reading_ids.reading_value', 'reading_ids.reading_date')
-    # def _compute_current_reading(self):
-    #     for meter in self:
-    #         if not meter.reading_ids:
-    #             meter.current_reading = meter.initial_reading
-    #             continue
-    #         latest = meter.reading_ids.sorted('reading_date', reverse=True)[:1]
-    #         meter.current_reading = latest.reading_value if latest else meter.initial_reading
+    @api.depends('reading_ids.reading_value', 'reading_ids.reading_date')
+    def _compute_current_reading(self):
+        for meter in self:
+            if not meter.reading_ids:
+                meter.current_reading = meter.initial_reading
+                continue
+            latest = meter.reading_ids.sorted('reading_date', reverse=True)[:1]
+            meter.current_reading = latest.reading_value if latest else meter.initial_reading
+
+    @api.constrains('product_id')
+    def _check_metered_product(self):
+        for meter in self:
+            if meter.product_id and not meter.product_id.is_metered_product:
+                raise ValidationError(
+                    "Selected product is not marked as a metered product."
+                )
+
+    @api.model
+    def action_replace_meter(self):
+        """Dummy action for Replace Meter button, avoids upgrade errors."""
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Replace Meter',
+            'res_model': 'utility.meter',  # just returns the current model
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {},
+        }
 
     # @api.onchange('status')
     # def _onchange_status(self):
