@@ -93,20 +93,20 @@ class UtilityMeter(models.Model):
                     "You must specify the new meter when replacing a meter."
                 )
 
-    @api.constrains('customer_id', 'product_id', 'status')
-    def _check_single_active_meter(self):
-        for meter in self:
-            if meter.status == 'active':
-                domain = [
-                    ('customer_id', '=', meter.customer_id.id),
-                    ('product_id', '=', meter.product_id.id),
-                    ('status', '=', 'active'),
-                    ('id', '!=', meter.id),
-                ]
-                if self.search_count(domain):
-                    raise ValidationError(
-                        "Only one active meter is allowed per customer and product."
-                    )
+    # @api.constrains('customer_id', 'product_id', 'status')
+    # def _check_single_active_meter(self):
+    #     for meter in self:
+    #         if meter.status == 'active':
+    #             domain = [
+    #                 ('customer_id', '=', meter.customer_id.id),
+    #                 ('product_id', '=', meter.product_id.id),
+    #                 ('status', '=', 'active'),
+    #                 ('id', '!=', meter.id),
+    #             ]
+    #             if self.search_count(domain):
+    #                 raise ValidationError(
+    #                     "Only one active meter is allowed per customer and product."
+    #                 )
 
     @api.depends('reading_ids.reading_value', 'reading_ids.reading_date')
     def _compute_current_reading(self):
@@ -125,16 +125,15 @@ class UtilityMeter(models.Model):
                     "Selected product is not marked as a metered product."
                 )
 
-    @api.model
     def action_replace_meter(self):
-        """Dummy action for Replace Meter button, avoids upgrade errors."""
         return {
-            'type': 'ir.actions.act_window',
             'name': 'Replace Meter',
-            'res_model': 'utility.meter',  # just returns the current model
+            'type': 'ir.actions.act_window',
+            'res_model': 'utility.meter.replace.wizard',
             'view_mode': 'form',
+            'view_id': self.env.ref('custom_invoice_meter.view_utility_meter_replace_wizard_form').id,
             'target': 'new',
-            'context': {},
+            'context': {'active_id': self.id},
         }
 
     # @api.onchange('status')

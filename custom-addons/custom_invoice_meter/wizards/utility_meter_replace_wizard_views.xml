@@ -1,0 +1,28 @@
+<odoo>
+    <record id="view_utility_meter_replace_wizard_form" model="ir.ui.view">
+        <field name="name">utility.meter.replace.wizard.form</field>
+        <field name="model">utility.meter.replace.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Replace Meter">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="new_meter_name"/>
+                            <field name="customer_id" readonly="1"/>
+                            <field name="replacement_date"/>
+                        </group>
+                        <group>
+                            <field name="old_meter_current_reading"/>
+                            <field name="new_meter_initial_reading"/>
+                        </group>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Confirm Replacement" type="object"
+                            name="action_confirm_replace" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

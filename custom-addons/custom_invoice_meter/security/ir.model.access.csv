@@ -2,3 +2,4 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_invoice_line_user,access_invoice_line_user,account.model_account_move_line,base.group_user,1,1,1,0
 access_utility_meter,access_utility_meter,model_utility_meter,base.group_user,1,1,1,0
 access_utility_meter_reading,access_utility_meter_reading,model_utility_meter_reading,base.group_user,1,1,1,0
+access_utility_meter_replace_wizard,access_utility_meter_replace_wizard,model_utility_meter_replace_wizard,base.group_user,1,1,1,0

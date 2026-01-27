@@ -14,6 +14,9 @@
         'views/utility_meter_views.xml',
         'views/utility_meter_menu.xml',
 
+        # wizards
+        'wizards/utility_meter_replace_wizard_views.xml',
+
         # reports
         'reports/invoice_report_views.xml',
     ],

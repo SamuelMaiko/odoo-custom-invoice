@@ -6,14 +6,14 @@
         <field name="model">utility.meter</field>
         <field name="arch" type="xml">
             <list string="Meters">
-                <field name="name"/>
+                <field name="name" width="180"/>
                 <field name="customer_id"/>
                 <field name="product_id"/>
                 <field name="status"/>
-                <field name="active_from"/>
-                <field name="active_to"/>
-                <field name="current_reading"/>
-                <field name="replacement_date"/>
+                <field name="active_from" width="160"/>
+                <field name="active_to" width="160"/>
+                <!-- <field name="current_reading"/> -->
+                <field name="replacement_date" width="160"/>
             </list>
         </field>
     </record>
@@ -29,7 +29,8 @@
                             type="object"
                             string="Replace Meter"
                             class="btn-primary"
-                            invisible="status == 'replaced'"/>
+                            invisible="status == 'replaced'"
+                            />
                 </header>
                 <!-- paste the rest of your XML from Developer Mode here -->
                 <sheet string="Utility Meter">
@@ -40,7 +41,7 @@
                             <field name="active_from"/>
                             <field name="initial_reading"/>
                             <field name="replaced_by_id" can_create="True" can_write="True"/>
-                            <field name="current_reading"/>
+                            <!-- <field name="current_reading"/> -->
                         </group>
                         <group>
                             <field name="customer_id" can_create="True" can_write="True"/>
