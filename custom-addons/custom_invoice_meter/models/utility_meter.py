@@ -177,8 +177,8 @@ class UtilityMeter(models.Model):
         ], order='reading_datetime desc', limit=1)
 
         final_value = (
-            end_reading.value
-            if end_reading else self.current_reading
+            self.final_reading
+            if end_reading else end_reading.reading_value
         )
 
         return {
@@ -197,4 +197,15 @@ class UtilityMeter(models.Model):
             ('reading_datetime', '<=', start_datetime),
         ], order='reading_datetime desc', limit=1)
 
-        return reading.value if reading else self.initial_reading
+        return reading.reading_value if reading else self.initial_reading
+
+    def _get_replaced_meters_in_period(self, customer, product, start, end):
+        domain = [
+            ('customer_id', '=', customer.id),
+            ('product_id', '=', product.id),
+            ('status', '=', 'replaced'),
+            ('replacement_datetime', '>=', start),
+            ('replacement_datetime', '<=', end),
+        ]
+
+        return self.search(domain, order='replacement_datetime asc')

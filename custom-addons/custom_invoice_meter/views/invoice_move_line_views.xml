@@ -18,6 +18,9 @@
                 <field name="actual_consumption" 
                        optional="show"
                        column_invisible="parent.move_type not in ('out_invoice', 'out_refund')"/>
+                <field name="old_meter_consumption" 
+                        optional="show"
+                        column_invisible="parent.move_type not in ('out_invoice', 'out_refund')"/>
             </xpath>
 
             <!-- Modify quantity field to make it readonly when actual_consumption is used -->

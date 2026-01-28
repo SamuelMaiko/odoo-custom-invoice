@@ -55,6 +55,7 @@
                         <field name="reading_ids" on_change="1">
                             <list string="Meter Reading" delete="False">
                                 <field name="reading_date" on_change="1"/>
+                                <field name="reading_value" on_change="1"/>
                             </list>
                         </field>
                     </group>

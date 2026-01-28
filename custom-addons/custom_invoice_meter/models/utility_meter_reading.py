@@ -52,10 +52,10 @@ class UtilityMeterReading(models.Model):
         help="Invoice line that generated this reading"
     )
 
-    _sql_constraints = [
-        ('meter_date_unique', 'UNIQUE(meter_id, reading_date)',
-         'Only one reading per meter per date is allowed'),
-    ]
+    # _sql_constraints = [
+    #     ('meter_date_unique', 'UNIQUE(meter_id, reading_date)',
+    #      'Only one reading per meter per date is allowed'),
+    # ]
 
     # @api.model
     # def create(self, vals):

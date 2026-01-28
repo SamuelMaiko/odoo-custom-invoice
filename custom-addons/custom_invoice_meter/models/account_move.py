@@ -9,8 +9,18 @@ class AccountMove(models.Model):
         default=fields.Datetime.now,
         readonly=True,
         states={'draft': [('readonly', False)]},
+        store=True,
         help="Exact datetime used for metering and billing logic"
     )
+
+    def action_post(self):
+        res = super().action_post()
+        # after posting, write meter readings for all lines
+        for move in self:
+            for line in move.line_ids:
+                if hasattr(line, 'write_meter_reading'):
+                    line.write_meter_reading()
+        return res
 
     def _compute_old_meter_consumption(self, product):
         self.ensure_one()
@@ -46,4 +56,44 @@ class AccountMove(models.Model):
             ('reading_datetime', '<=', start_datetime),
         ], order='reading_datetime desc', limit=1)
 
-        return reading.value if reading else self.initial_reading
+        return reading.reading_value if reading else self.initial_reading
+
+    def _get_last_invoice_datetime(self, partner, product):
+        """Return the last posted invoice datetime for this customer and product."""
+        self.ensure_one()
+
+        lines = self.env['account.move.line'].search([
+            ('move_id.partner_id', '=', partner.id),
+            ('product_id', '=', product.id),
+            ('move_id.state', '=', 'posted'),
+            ('move_id.move_type', 'in', ['out_invoice', 'out_refund']),
+        ])
+
+        if not lines:
+            return None
+
+        # Sort in Python by invoice_datetime
+        last_line = max(lines, key=lambda l: l.move_id.invoice_datetime)
+        return last_line.move_id.invoice_datetime
+
+    # _get_metering_period
+    def _get_metering_period(self, product):
+        """
+        Returns (start_datetime, end_datetime)
+        """
+        self.ensure_one()
+        end = self.invoice_datetime
+
+        lines = self.env['account.move.line'].search([
+            ('move_id.state', '=', 'posted'),
+            ('move_id.move_type', '=', 'out_invoice'),
+            ('move_id.partner_id', '=', self.partner_id.id),
+            ('product_id', '=', product.id),
+            ('id', '!=', self.id),
+        ])
+
+        last_line = max(
+            lines, key=lambda l: l.move_id.invoice_datetime) if lines else None
+        start = last_line.move_id.invoice_datetime if last_line else False
+
+        return start, end
