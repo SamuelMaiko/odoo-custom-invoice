@@ -38,6 +38,20 @@ class UtilityMeterReading(models.Model):
     # employee_id = fields.Many2one('hr.employee', string='Read by')
     notes = fields.Text(string='Notes')
 
+    reading_datetime = fields.Datetime(
+        string='Reading Datetime',
+        required=True,
+        default=lambda self: fields.Datetime.now(),  # fallback to current timestamp
+        help="Exact datetime the reading was taken"
+    )
+
+    invoice_line_id = fields.Many2one(
+        'account.move.line',
+        string="Invoice Line",
+        ondelete='set null',
+        help="Invoice line that generated this reading"
+    )
+
     _sql_constraints = [
         ('meter_date_unique', 'UNIQUE(meter_id, reading_date)',
          'Only one reading per meter per date is allowed'),

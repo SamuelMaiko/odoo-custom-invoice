@@ -56,14 +56,17 @@ class UtilityMeterReplaceWizard(models.TransientModel):
             'customer_id': self.customer_id.id,
             'status': 'active',
             'active_from': self.replacement_date,
+            'active_from_datetime': fields.Datetime.now(),
             'initial_reading': self.new_meter_initial_reading,
         })
 
         # 2️⃣ Update old meter
         old_meter.replaced_by_id = new_meter.id
         old_meter.replacement_date = self.replacement_date
+        old_meter.replacement_datetime = fields.Datetime.now()
         old_meter.status = 'replaced'
         old_meter.final_reading = self.old_meter_current_reading
         old_meter.active_to = self.replacement_date
+        old_meter.active_to_datetime = fields.Datetime.now()
 
         return {'type': 'ir.actions.act_window_close'}

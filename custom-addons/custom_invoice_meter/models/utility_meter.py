@@ -40,6 +40,15 @@ class UtilityMeter(models.Model):
     active_to = fields.Date(
         string='Active To',
     )
+    active_from_datetime = fields.Datetime(
+        string='Active From (Datetime)',
+        required=True,
+        default=lambda self: fields.Datetime.now(),  # fallback to current timestamp
+    )
+
+    active_to_datetime = fields.Datetime(
+        string='Active To (Datetime)',
+    )
 
     initial_reading = fields.Float(
         string='Initial Reading',
@@ -62,6 +71,12 @@ class UtilityMeter(models.Model):
     )
     replacement_date = fields.Date(
         string='Replacement Date',
+    )
+
+    replacement_datetime = fields.Datetime(
+        string="Replacement Datetime",
+        readonly=True,
+        help="Exact datetime when the meter was replaced"
     )
 
     # Computed / relational fields
@@ -150,3 +165,36 @@ class UtilityMeter(models.Model):
     #     ('name_unique', 'UNIQUE(name)',
     #      'Meter serial number must be unique!'),
     # ]
+
+    def _compute_consumption(self, start, end):
+        self.ensure_one()
+
+        start_reading = self._get_previous_reading(start)
+
+        end_reading = self.env['utility.meter.reading'].search([
+            ('meter_id', '=', self.id),
+            ('reading_datetime', '<=', end),
+        ], order='reading_datetime desc', limit=1)
+
+        final_value = (
+            end_reading.value
+            if end_reading else self.current_reading
+        )
+
+        return {
+            'meter_id': self.id,
+            'meter_name': self.name,
+            'previous_reading': start_reading,
+            'final_reading': final_value,
+            'consumed_units': final_value - start_reading,
+        }
+
+    def _get_previous_reading(self, start_datetime):
+        self.ensure_one()
+
+        reading = self.env['utility.meter.reading'].search([
+            ('meter_id', '=', self.id),
+            ('reading_datetime', '<=', start_datetime),
+        ], order='reading_datetime desc', limit=1)
+
+        return reading.value if reading else self.initial_reading
