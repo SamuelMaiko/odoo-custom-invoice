@@ -60,7 +60,7 @@ class UtilityMeter(models.Model):
         digits=(16, 3),
         default=0.0,
         readonly=True,
-        states={'replaced': [('readonly', False)]},
+        # states={'replaced': [('readonly', False)]},
     )
 
     replaced_by_id = fields.Many2one(

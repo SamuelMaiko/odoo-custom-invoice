@@ -9,7 +9,7 @@ class AccountMove(models.Model):
         string="Invoice Datetime",
         default=fields.Datetime.now,
         readonly=True,
-        states={'draft': [('readonly', False)]},
+        # states={'draft': [('readonly', False)]},
         store=True,
         help="Exact datetime used for metering and billing logic"
     )

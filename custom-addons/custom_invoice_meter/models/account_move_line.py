@@ -13,7 +13,7 @@ class AccountMoveLine(models.Model):
 
     current_reading = fields.Float(
         string='New',
-        required=True
+        default=0.0,
     )
 
     actual_consumption = fields.Float(
@@ -26,6 +26,12 @@ class AccountMoveLine(models.Model):
         compute='_compute_readings',
         store=True,
     )
+
+    @api.constrains('current_reading')
+    def _check_current_reading(self):
+        for rec in self:
+            if rec.current_reading < 0:
+                raise ValidationError("Current reading cannot be negative")
 
     @api.depends('product_id', 'move_id.partner_id', 'move_id.invoice_datetime')
     def _compute_readings(self):

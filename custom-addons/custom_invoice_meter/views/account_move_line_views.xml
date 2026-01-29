@@ -40,7 +40,7 @@
             </xpath>
             
             <!-- Add meter readings fields to kanban (for mobile compatibility) -->
-            <xpath expr="//field[@name='invoice_line_ids']/kanban/templates/t[@t-name='card']//div[@class='text-muted'][last()]" position="after">
+            <xpath expr="//field[@name='invoice_line_ids']/kanban/templates/t[@t-name='card']//div[hasclass('text-muted')][last()]" position="after">
                 <div class="text-muted" t-if="!['line_section', 'line_note'].includes(record.display_type.raw_value) and ['out_invoice', 'out_refund'].includes(record.parent.move_type)">
                     <t t-if="record.previous_reading.raw_value or record.current_reading.raw_value">
                         Meter - Prev: 
