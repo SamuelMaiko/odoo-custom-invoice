@@ -34,7 +34,8 @@ class UtilityMeterReplaceWizard(models.TransientModel):
     def default_get(self, fields_list):
         res = super().default_get(fields_list)
         context = self.env.context
-        old_meter = self.env['utility.meter'].browse(context.get('active_id'))
+        old_meter = self.env['utility.meter'].browse(
+            context.get('default_meter_id'))
         if old_meter:
             res.update({
                 'old_meter_id': old_meter.id,

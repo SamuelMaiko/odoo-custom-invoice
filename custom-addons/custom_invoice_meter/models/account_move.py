@@ -1,4 +1,5 @@
 from odoo import fields, models
+from odoo.exceptions import ValidationError
 
 
 class AccountMove(models.Model):
@@ -97,3 +98,54 @@ class AccountMove(models.Model):
         start = last_line.move_id.invoice_datetime if last_line else False
 
         return start, end
+
+    def action_replace_meter(self):
+        self.ensure_one()
+
+        if self.state != 'draft':
+            raise ValidationError(
+                "Meter replacement is only allowed in draft invoices."
+            )
+
+        meter_lines = self.invoice_line_ids.filtered(
+            lambda l: l.product_id.is_metered_product
+        )
+
+        if not meter_lines:
+            raise ValidationError("No metered invoice line found.")
+
+        if len(meter_lines) > 1:
+            raise ValidationError(
+                "Multiple metered lines found. Cannot determine target meter."
+            )
+
+        line = meter_lines[0]
+        partner = self.partner_id
+        product = line.product_id
+
+        active_meter = self.env['utility.meter'].search([
+            ('customer_id', '=', partner.id),
+            ('product_id', '=', product.id),
+            ('status', '=', 'active'),
+        ], limit=1)
+
+        print("active_meter", active_meter)
+
+        if not active_meter:
+            raise ValidationError(
+                "No active meter found for this customer and product."
+            )
+
+        return {
+            "type": "ir.actions.act_window",
+            "name": "Replace Meter",
+            "res_model": "utility.meter.replace.wizard",
+            "view_mode": "form",
+            "target": "new",
+            "context": {
+                "default_meter_id": active_meter.id,
+                "default_invoice_id": self.id,
+                "default_invoice_line_id": line.id,
+                "default_effective_date": self.invoice_date,
+            },
+        }

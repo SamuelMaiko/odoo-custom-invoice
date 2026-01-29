@@ -51,11 +51,12 @@
                             <field name="replacement_date"/>
                         </group>
                     </group>
-                    <group>
-                        <field name="reading_ids" on_change="1">
+                    <group >
+                        <field name="reading_ids" on_change="1" colspan="1">
                             <list string="Meter Reading" delete="False">
-                                <field name="reading_date" on_change="1"/>
-                                <field name="reading_value" on_change="1"/>
+                                <field name="reading_date" on_change="1" width="160"/>
+                                <field name="reading_value" on_change="1" width="160"/>
+                                 <field name="notes" on_change="1" width="160"/>
                             </list>
                         </field>
                     </group>

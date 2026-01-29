@@ -9,7 +9,8 @@
         'security/ir.model.access.csv',
 
         # views
-        'views/invoice_move_line_views.xml',
+        'views/account_move_views.xml',
+        'views/account_move_line_views.xml',
         'views/product_views.xml',
         'views/utility_meter_views.xml',
         'views/utility_meter_menu.xml',

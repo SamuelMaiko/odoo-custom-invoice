@@ -148,7 +148,7 @@ class UtilityMeter(models.Model):
             'view_mode': 'form',
             'view_id': self.env.ref('custom_invoice_meter.view_utility_meter_replace_wizard_form').id,
             'target': 'new',
-            'context': {'active_id': self.id},
+            'context': {'default_meter_id': self.id},
         }
 
     # @api.onchange('status')

@@ -67,7 +67,6 @@ class AccountMoveLine(models.Model):
             # 4️⃣ Compute actual consumption
             if line.current_reading:
                 line.actual_consumption = line.current_reading - line.previous_reading
-                print("actual consumptioni", line.actual_consumption)
                 line.quantity = line.actual_consumption+line.old_meter_consumption
             else:
                 line.actual_consumption = 0
@@ -108,7 +107,6 @@ class AccountMoveLine(models.Model):
             ('status', '=', 'active'),
         ], limit=1)
 
-        print("YOUR METER", meter)
         if not meter:
             return
 
