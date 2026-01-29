@@ -9,6 +9,7 @@
                 <th name="th_current_reading" class="text-end">New</th>
                 <th name="th_previous_reading" class="text-end">Previous</th>
                 <th name="th_consumption" class="text-end">Actual</th>
+                <th name="th_old_meter_consumption" class="text-end">Old meter(s)</th>
             </xpath>
 
             <!-- Add data cells for product lines - after the taxes cell -->
@@ -21,6 +22,9 @@
                 </td>
                 <td name="td_consumption" class="text-end">
                     <span t-field="line.actual_consumption"/>
+                </td>
+                <td name="td_old_meter_consumption" class="text-end">
+                    <span t-field="line.old_meter_consumption"/>
                 </td>
             </xpath>
 
