@@ -27,6 +27,8 @@ class AccountMove(models.Model):
         self.ensure_one()
 
         start, end = self._get_metering_period(product)
+        print("START OF PERIOD", start)
+        print("END OF PERIOD", end)
 
         meters = self.env['utility.meter']._get_replaced_meters_in_period(
             self.partner_id,
@@ -146,6 +148,6 @@ class AccountMove(models.Model):
                 "default_meter_id": active_meter.id,
                 "default_invoice_id": self.id,
                 "default_invoice_line_id": line.id,
-                "default_effective_date": self.invoice_date,
+                "default_effective_datetime": self.invoice_datetime,
             },
         }

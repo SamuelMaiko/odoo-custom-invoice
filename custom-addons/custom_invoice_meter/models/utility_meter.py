@@ -108,21 +108,6 @@ class UtilityMeter(models.Model):
                     "You must specify the new meter when replacing a meter."
                 )
 
-    # @api.constrains('customer_id', 'product_id', 'status')
-    # def _check_single_active_meter(self):
-    #     for meter in self:
-    #         if meter.status == 'active':
-    #             domain = [
-    #                 ('customer_id', '=', meter.customer_id.id),
-    #                 ('product_id', '=', meter.product_id.id),
-    #                 ('status', '=', 'active'),
-    #                 ('id', '!=', meter.id),
-    #             ]
-    #             if self.search_count(domain):
-    #                 raise ValidationError(
-    #                     "Only one active meter is allowed per customer and product."
-    #                 )
-
     @api.depends('reading_ids.reading_value', 'reading_ids.reading_date')
     def _compute_current_reading(self):
         for meter in self:
@@ -151,36 +136,12 @@ class UtilityMeter(models.Model):
             'context': {'default_meter_id': self.id},
         }
 
-    # @api.onchange('status')
-    # def _onchange_status(self):
-    #     if self.status == 'replaced':
-    #         if not self.replacement_date:
-    #             self.replacement_date = fields.Date.today()
-    #     else:
-    #         self.replacement_date = False
-    #         self.final_reading = 0.0
-    #         self.replaced_by_id = False
-
-    # _sql_constraints = [
-    #     ('name_unique', 'UNIQUE(name)',
-    #      'Meter serial number must be unique!'),
-    # ]
-
     def _compute_consumption(self, start, end):
         self.ensure_one()
 
         start_reading = self._get_previous_reading(start)
 
-        end_reading = self.env['utility.meter.reading'].search([
-            ('meter_id', '=', self.id),
-            ('reading_datetime', '<=', end),
-        ], order='reading_datetime desc', limit=1)
-
-        final_value = (
-            self.final_reading
-            if end_reading else end_reading.reading_value
-        )
-
+        final_value = self.final_reading
         return {
             'meter_id': self.id,
             'meter_name': self.name,

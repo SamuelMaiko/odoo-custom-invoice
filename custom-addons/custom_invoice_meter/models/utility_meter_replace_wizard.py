@@ -1,6 +1,6 @@
 # models/utility_meter_replace_wizard.py
 from odoo import models, fields, api
-from datetime import date
+from datetime import date, timedelta
 
 
 class UtilityMeterReplaceWizard(models.TransientModel):
@@ -48,6 +48,7 @@ class UtilityMeterReplaceWizard(models.TransientModel):
     def action_confirm_replace(self):
         """Replace the meter."""
         self.ensure_one()
+
         old_meter = self.old_meter_id
 
         # 1️⃣ Create new meter
@@ -64,10 +65,27 @@ class UtilityMeterReplaceWizard(models.TransientModel):
         # 2️⃣ Update old meter
         old_meter.replaced_by_id = new_meter.id
         old_meter.replacement_date = self.replacement_date
-        old_meter.replacement_datetime = fields.Datetime.now()
         old_meter.status = 'replaced'
         old_meter.final_reading = self.old_meter_current_reading
         old_meter.active_to = self.replacement_date
         old_meter.active_to_datetime = fields.Datetime.now()
 
-        return {'type': 'ir.actions.act_window_close'}
+        invoice_dt_str = self.env.context.get('default_effective_datetime')
+        if invoice_dt_str:
+            invoice_dt = fields.Datetime.from_string(invoice_dt_str)
+            replacement_dt = invoice_dt - timedelta(seconds=1)
+        else:
+            replacement_dt = fields.Datetime.now()
+
+        old_meter.replacement_datetime = replacement_dt
+
+        invoice_id = self.env.context.get('default_invoice_id')
+        line_id = self.env.context.get('default_invoice_line_id')
+
+        if invoice_id and line_id:
+            invoice_line = self.env['account.move.line'].browse(line_id)
+            # force recompute previous/current/actual for UI
+            invoice_line._compute_readings()
+            invoice_line._set_previous_reading()
+
+        return {'type': 'ir.actions.act_window_close', 'tag': 'reload', }
